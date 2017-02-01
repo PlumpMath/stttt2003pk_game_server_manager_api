@@ -133,8 +133,59 @@ class PackHandler(BaseHandler):
         agent_list = post_data['agent_list']
         file_name = post_data['file_name']
 
-        print agent_list
-        print file_name
+        if agent_list and file_name:
+            tgt = agent_list
+
+            gameserver_file = file_name
+            source_file_dir = config['source_file_dir']
+            source_file = os.path.abspath(os.path.join(source_file_dir, gameserver_file))
+            dst_file_dir = config['dst_file_dir']
+            dst_file = os.path.abspath(os.path.join(dst_file_dir, gameserver_file))
+
+            saltrun = saltstackwork()
+            ret_copy = saltrun.__file_copy_cmd__(tgt, source_file, dst_file)
+
+            md5cmd = 'md5sum %s' % source_file
+            md5value = 'md5:%s' % os.popen(md5cmd).readline().split()[0]
+
+            ret_md5 = saltrun.__file_check_hash__(tgt, dst_file, md5value=md5value)
+
+            copy_success_list = []
+            copy_fail_list = []
+            for i in ret_copy:
+                if i['id'] and i['result'] == True:
+                    copy_success_list.append(i['id'])
+                else:
+                    copy_fail_list.append(i['id'])
+
+            md5_success_list = []
+            md5_fail_list = []
+            for i in ret_md5:
+                if i['id'] and i['result'] == True:
+                    md5_success_list.append(i['id'])
+                else:
+                    md5_fail_list.append(i['id'])
+
+            dict_ret = {
+                'success': [],
+                'failed': {
+                    'copy': [],
+                    'md5': [],
+                }
+            }
+            for agent in tgt:
+                if agent in copy_success_list and md5_success_list:
+                    dict_ret['success'].append(agent)
+                else:
+                    if agent in copy_fail_list:
+                        dict_ret['failed']['copy'].append(agent)
+                    if agent in md5_fail_list:
+                        dict_ret['failed']['md5'].append(agent)
+
+            ret_str = json.dumps(dict_ret, sort_keys=False, indent=4, separators=(',', ': '))
+
+            self.write(ret_str)
+
 
 
 
