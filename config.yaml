@@ -4,6 +4,8 @@ source_file_dir: /home/gamefile_storage/
 
 dst_file_dir: /var/gamefile/
 
+salt_log_file: salt_master.log
+
 agent:
   - id: gamefile.stttt2003pk.com
     ipadd: 192.168.100.77

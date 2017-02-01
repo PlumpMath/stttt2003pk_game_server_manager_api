@@ -20,12 +20,19 @@ if config['agent']:
         if agent['id']:
             tgt.append(agent['id'])
 
-gameserver_file = 'test.html'
+gameserver_file = 'cod4x18_dedrun.tar.bz2'
 source_file_dir = config['source_file_dir']
 source_file = os.path.abspath(os.path.join(source_file_dir, gameserver_file))
 dst_file_dir = config['dst_file_dir']
 dst_file = os.path.abspath(os.path.join(dst_file_dir, gameserver_file))
 
 saltrun = saltstackwork()
-print saltrun.test_cmd()
+
+saltrun.__file_copy_cmd__(tgt, source_file, dst_file)
+
+md5cmd = 'md5sum %s' %source_file
+md5value = 'md5:%s'%os.popen(md5cmd).readline().split()[0]
+print md5value
+ret = saltrun.__file_check_hash__(tgt, dst_file, md5value=md5value)
+print ret
 
