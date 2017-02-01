@@ -12,7 +12,7 @@ import json
 
 class mysql_conn():
     def __init__(self):
-        self._db = torndb.Connection('127.0.0.1', 'devops', user='root', password='')
+        self._db = torndb.Connection('127.0.0.1', 'cod4server_ops_db', user='root', password='')
 
     @property
     def db(self):

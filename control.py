@@ -125,10 +125,16 @@ class PackHandler(BaseHandler):
     def get(self):
         handler = db_Model('agentInfoTable')
         agentInfo = handler.__getAgentInfo__()
-        print agentInfo
+        #print agentInfo
+        self.write(json.dumps(agentInfo))
 
     def post(self):
-        pass
+        post_data = json.loads(self.request.body)
+        agent_list = post_data['agent_list']
+        file_name = post_data['file_name']
+
+        print agent_list
+        print file_name
 
 
 

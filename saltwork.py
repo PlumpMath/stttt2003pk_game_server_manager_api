@@ -5,6 +5,8 @@ import logging
 import sys, os
 import yaml
 
+from tornado.log import access_log, app_log, gen_log
+
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 par_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 config_file = os.path.abspath(os.path.join(cur_dir, 'config.yaml'))
@@ -14,18 +16,18 @@ salt_log_dir = os.path.join(cur_dir, 'log/')
 salt_log_file = config['salt_log_file']
 log_file= os.path.join(salt_log_dir, salt_log_file)
 
-try:
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        filename=log_file,
-        filemode='a',
-    )
-    log = logging.getLogger('salt')
-except Exception, err:
-    print("Error: %s %s" % (err, log_file))
-    sys.exit(2)
+# try:
+#     logging.basicConfig(
+#         level=logging.INFO,
+#         format='%(asctime)s %(levelname)-8s %(message)s',
+#         datefmt='%Y-%m-%d %H:%M:%S',
+#         filename=log_file,
+#         filemode='a',
+#     )
+#     log = logging.getLogger('salt')
+# except Exception, err:
+#     print("Error: %s %s" % (err, log_file))
+#     sys.exit(2)
 
 class saltstackwork():
     def __init__(self):
@@ -48,7 +50,7 @@ class saltstackwork():
 
     def test_cmd(self):
         result = self.local.cmd('*', 'test.ping')
-        log.info('test salt log')
+        access_log.info('test salt log')
         return result
 
     # def __file_manage_cmd__(self, tgt, source_file, dst_file, **kwargs):
@@ -105,10 +107,10 @@ class saltstackwork():
         for i in tgt:
             if result.has_key(i):
                 result_list.append({"id": i, "ret": result[i], "result": True})
-                log.info('%s copy %s to %s success' %(i, source_file, dst_file))
+                access_log.info('%s copy %s to %s success' %(i, source_file, dst_file))
             else:
                 result_list.append({"id": i, "result": False})
-                log.error('%s copy %s to %s No Connect' %(i, source_file, dst_file))
+                access_log.error('%s copy %s to %s No Connect' %(i, source_file, dst_file))
 
         return result_list
 
@@ -122,12 +124,12 @@ class saltstackwork():
             if result.has_key(i):
                 result_list.append({"id": i, "ret": result[i], "result": result[i]})
                 if result[i] == True:
-                    log.info('%s md5_check %s result %s' % (i, check_file, result[i]))
+                    access_log.info('%s md5_check %s result %s' % (i, check_file, result[i]))
                 else:
-                    log.error('%s md5_check %s result %s' % (i, check_file, result[i]))
+                    access_log.error('%s md5_check %s result %s' % (i, check_file, result[i]))
             else:
                 result_list.append({"id": i, "result": False})
-                log.error('%s md5_check result %s' % (i, 'No Connect'))
+                access_log.error('%s md5_check result %s' % (i, 'No Connect'))
 
         return result_list
 
