@@ -1,0 +1,14 @@
+---
+
+source_file_dir: /home/gamefile_storage/
+
+dst_file_dir: /var/gamefile/
+
+agent:
+  - id: gamefile.stttt2003pk.com
+    ipadd: 192.168.100.77
+    area: home
+
+  - id: devops.stttt2003pk.com
+    ipadd: 192.168.100.167
+    area: tencent
