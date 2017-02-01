@@ -17,9 +17,13 @@ import yaml
 
 import datetime, time
 import subprocess
+from saltwork import *
+
+from db_model import *
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
-
+config_file = os.path.abspath(os.path.join(cur_dir, 'config.yaml'))
+config = yaml.load(open(config_file))
 
 class TemplateRendering():
     def __init__(self):
@@ -112,16 +116,51 @@ class BaseHandler(tornado.web.RequestHandler, TemplateRendering):
                 return "False error timeout"
         return process.stdout.read()
 
-
-
-
-
-
-
-
-
-
-
 class HomeHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write('test')
+        self.write('welcome to the api deployment about cod4server')
+
+class PackHandler(BaseHandler):
+
+    def get(self):
+        handler = db_Model('agentInfoTable')
+        agentInfo = handler.__getAgentInfo__()
+        print agentInfo
+
+    def post(self):
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

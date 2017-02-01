@@ -19,8 +19,13 @@ class mysql_conn():
         return self._db
 
 class db_Model():
-    def __init__(self):
+    def __init__(self, method):
+        self.method = method
         self.mysql = mysql_conn()
         self.db = self.mysql.db
+
+    def __getAgentInfo__(self):
+        result = self.db.query("select * from agentInfoTable")
+        return  result
 
 
