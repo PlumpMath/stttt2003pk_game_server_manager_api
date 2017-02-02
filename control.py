@@ -11,6 +11,10 @@ from tornado.options import options
 import tornado.web
 from tornado.escape import json_decode, json_encode
 import torndb
+import tornado.gen
+from tornado.concurrent import run_on_executor
+from concurrent.futures import ThreadPoolExecutor
+
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 import yaml
@@ -121,6 +125,8 @@ class HomeHandler(tornado.web.RequestHandler):
         self.write('welcome to the api deployment about cod4server')
 
 class PackHandler(BaseHandler):
+    executor = ThreadPoolExecutor(1)
+    saltrun = saltstackwork()
 
     def get(self):
         handler = db_Model('agentInfoTable')
@@ -128,6 +134,8 @@ class PackHandler(BaseHandler):
         #print agentInfo
         self.write(json.dumps(agentInfo))
 
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def post(self):
         post_data = json.loads(self.request.body)
         agent_list = post_data['agent_list']
@@ -142,13 +150,14 @@ class PackHandler(BaseHandler):
             dst_file_dir = config['dst_file_dir']
             dst_file = os.path.abspath(os.path.join(dst_file_dir, gameserver_file))
 
-            saltrun = saltstackwork()
-            ret_copy = saltrun.__file_copy_cmd__(tgt, source_file, dst_file)
+            ret_copy = yield self.__file_copy_cmd(tgt, source_file, dst_file)
+            print ret_copy
 
-            md5cmd = 'md5sum %s' % source_file
-            md5value = 'md5:%s' % os.popen(md5cmd).readline().split()[0]
+            md5value = yield self.__md5sum(source_file)
+            print md5value
 
-            ret_md5 = saltrun.__file_check_hash__(tgt, dst_file, md5value=md5value)
+            ret_md5 = yield self.__file_check_hash(tgt, dst_file, md5value)
+            print ret_md5
 
             copy_success_list = []
             copy_fail_list = []
@@ -185,6 +194,26 @@ class PackHandler(BaseHandler):
             ret_str = json.dumps(dict_ret, sort_keys=False, indent=4, separators=(',', ': '))
 
             self.write(ret_str)
+            self.finish()
+
+    @run_on_executor
+    def __file_copy_cmd(self, tgt, source_file, dst_file):
+        ret = self.saltrun.__file_copy_cmd__(tgt, source_file, dst_file)
+        return ret
+
+    @run_on_executor
+    def __md5sum(self, source_file):
+        md5cmd = 'md5sum %s' % source_file
+        md5value = 'md5:%s' % os.popen(md5cmd).readline().split()[0]
+        return  md5value
+
+    @run_on_executor()
+    def __file_check_hash(self, tgt, dst_file, md5value):
+        ret = self.saltrun.__file_check_hash__(tgt, dst_file, md5value=md5value)
+        return ret
+
+
+
 
 
 
