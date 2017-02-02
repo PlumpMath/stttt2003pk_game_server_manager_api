@@ -7,28 +7,6 @@ import yaml
 
 from tornado.log import access_log, app_log, gen_log
 
-cur_dir = os.path.dirname(os.path.abspath(__file__))
-par_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
-config_file = os.path.abspath(os.path.join(cur_dir, 'config.yaml'))
-config = yaml.load(open(config_file))
-
-salt_log_dir = os.path.join(cur_dir, 'log/')
-salt_log_file = config['salt_log_file']
-log_file= os.path.join(salt_log_dir, salt_log_file)
-
-# try:
-#     logging.basicConfig(
-#         level=logging.INFO,
-#         format='%(asctime)s %(levelname)-8s %(message)s',
-#         datefmt='%Y-%m-%d %H:%M:%S',
-#         filename=log_file,
-#         filemode='a',
-#     )
-#     log = logging.getLogger('salt')
-# except Exception, err:
-#     print("Error: %s %s" % (err, log_file))
-#     sys.exit(2)
-
 class saltstackwork():
     def __init__(self):
         import salt.client

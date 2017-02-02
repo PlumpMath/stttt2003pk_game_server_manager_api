@@ -29,6 +29,26 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 config_file = os.path.abspath(os.path.join(cur_dir, 'config.yaml'))
 config = yaml.load(open(config_file))
 
+#par_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+
+salt_log_dir = os.path.join(cur_dir, 'log/')
+salt_log_file = config['salt_log_file']
+tornado_log_file = 'tornado.log'
+log_file= os.path.join(salt_log_dir, tornado_log_file)
+
+try:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename=log_file,
+        filemode='a',
+    )
+    log = logging.getLogger('salt')
+except Exception, err:
+    print("Error: %s %s" % (err, log_file))
+    sys.exit(2)
+
 class TemplateRendering():
     def __init__(self):
         #	self.settings = dict(
@@ -131,7 +151,6 @@ class PackHandler(BaseHandler):
     def get(self):
         handler = db_Model('agentInfoTable')
         agentInfo = handler.__getAgentInfo__()
-        #print agentInfo
         self.write(json.dumps(agentInfo))
 
     @tornado.web.asynchronous

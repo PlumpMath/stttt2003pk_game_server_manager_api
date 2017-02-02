@@ -28,7 +28,6 @@ class db_Model():
         result = self.db.query("select * from agentInfoTable")
         return  result
 
-    # def __insertAgentCopyJob__(self, ret):
-    #     self.db.query("insert into ")
+
 
 
