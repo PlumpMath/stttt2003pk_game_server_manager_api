@@ -23,8 +23,25 @@ class saltstackwork():
                 result_list.append({"id": i, "result": False})
         return result_list
 
-    def rsync_cmd(self, tgt, source_file, dst_file):
-        pass
+    def __rsync_cmd__(self, tgt, source_file, dst_file):
+        dict = {
+            'delete': True,
+            'update': True,
+        }
+        result = self.local.cmd(tgt, 'rsync.rsync', [source_file, dst_file],
+                                kwarg=dict,
+                                expr_form='list', timeout=10)
+
+        result_list = []
+        for i in tgt:
+            if result.has_key(i):
+                result_list.append({"id": i, "ret": result[i], "result": True})
+                access_log.info('%s rsync %s to %s success' % (i, source_file, dst_file))
+            else:
+                result_list.append({"id": i, "result": False})
+                access_log.error('%s rsync %s to %s No Connect' % (i, source_file, dst_file))
+
+        return result_list
 
     def test_cmd(self):
         result = self.local.cmd('*', 'test.ping')

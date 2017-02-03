@@ -188,12 +188,12 @@ class SocketHandler(BaseHandler):
         self.stream.write(struct.pack('!H', self.type), self.send_data)
 
     def send_data(self):
-        if self.type == '1':
+        if self.type == 1:
             command_len = len(self.command)
             str_pack = "!II%ds" %command_len
             self.stream.write(struct.pack(str_pack, self.job_id, command_len, self.command.encode('utf-8')))
-            self.stream.read_bytes(6, self.status_request)
-        self.stream.write('')
+            #self.stream.read_bytes(6, self.status_request)
+
 
     def status_request(self, data):
         running_state, recive = struct.unpack('!HI', data)
@@ -290,12 +290,67 @@ class PackHandler(BaseHandler):
         ret = self.saltrun.__file_check_hash__(tgt, dst_file, md5value=md5value)
         return ret
 
-class unpackHandler(SocketHandler):
+class rsyncHandler(BaseHandler):
+    executor = ThreadPoolExecutor(1)
+    saltrun = saltstackwork()
+
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def post(self):
+        post_data = json.loads(self.request.body)
+        agent_list = post_data['agent_list']
+        dir_name = post_data['dir_name']
+
+        if agent_list and dir_name:
+            tgt = agent_list
+
+            gameserver_dir = dir_name
+            source_file_dir = config['source_file_dir']
+            source_file = os.path.abspath(os.path.join(source_file_dir, gameserver_dir))
+            dst_file_dir = config['dst_file_dir']
+            #dst_file = os.path.abspath(os.path.join(dst_file_dir, gameserver_dir))
+            dst_file = dst_file_dir
+
+            # # print source_file
+            # print dst_file
+
+            ret_rsync =yield self.__rsyn_cmd(tgt, source_file, dst_file)
+
+            rsync_success_list = []
+            rsync_fail_list = []
+            for i in ret_rsync:
+                if i['id'] and i['result'] == True:
+                    rsync_success_list.append(i['id'])
+                else:
+                    rsync_fail_list.append(i['id'])
+
+            dict_ret = {
+                'success': rsync_success_list,
+                'failed': rsync_fail_list
+            }
+
+            ret_str = json.dumps(dict_ret, sort_keys=False, indent=4, separators=(',', ': '))
+            self.write(ret_str)
+            self.finish()
+
+    @run_on_executor
+    def __rsyn_cmd(self, tgt, source_file, dst_file):
+        ret = self.saltrun.__rsync_cmd__(tgt, source_file, dst_file)
+        return ret
+
+class autoHandler(SocketHandler):
 
     def post(self):
-        self.send_socket(id='1',
+        self.send_socket(id=77,
                          ipaddr='192.168.100.77',
-                         command='unpack')
+                         command='ai')
+
+
+
+
+
+
+
 
 
 

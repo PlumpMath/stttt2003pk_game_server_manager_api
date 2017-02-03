@@ -29,7 +29,8 @@ class Application(tornado.web.Application):
         web_path = [
             (r"/", control.HomeHandler),
             (r"/packhandler/", control.PackHandler),
-            (r"/unpackhandler/", control.unpackHandler)
+            (r"/autoinstall/", control.autoHandler),
+            (r"/rsyncpack/", control.rsyncHandler)
         ]
 
         handlers = web_path
