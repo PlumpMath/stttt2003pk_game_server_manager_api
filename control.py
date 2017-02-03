@@ -192,8 +192,7 @@ class SocketHandler(BaseHandler):
             command_len = len(self.command)
             str_pack = "!II%ds" %command_len
             self.stream.write(struct.pack(str_pack, self.job_id, command_len, self.command.encode('utf-8')))
-            #self.stream.read_bytes(6, self.status_request)
-
+            self.stream.read_bytes(6, self.status_request)
 
     def status_request(self, data):
         running_state, recive = struct.unpack('!HI', data)
@@ -341,9 +340,14 @@ class rsyncHandler(BaseHandler):
 class autoHandler(SocketHandler):
 
     def post(self):
-        self.send_socket(id=77,
-                         ipaddr='192.168.100.77',
-                         command='ai')
+
+        action = self.get_argument('action', None)
+        if action:
+            self.send_socket(id=77,
+                            ipaddr='192.168.100.77',
+                            command=action)
+
+
 
 
 

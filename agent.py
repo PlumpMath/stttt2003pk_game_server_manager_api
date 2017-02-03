@@ -47,8 +47,8 @@ class Server(threading.Thread):
                             joblist_id = self.__read_Int()
                             command = self.__read_Char()
 
-                            print joblist_id
-                            print command
+                            self.__report_status(joblist_id)
+                            self.__game(command)
 
                         self.cs.close()
 
@@ -85,6 +85,26 @@ class Server(threading.Thread):
             return char
         except:
             return None
+
+    def __report_status(self, joblist_id):
+        running_state = struct.pack('!HI', 4, joblist_id)
+        self.cs.send(running_state)
+
+    def __game(self, action):
+        game_file_dir = '/var/gamefile/cod4server/'
+        cod4server_script_name = 'cod4server.sh'
+        command = 'cd %s && %s%s %s' %(game_file_dir, game_file_dir, cod4server_script_name, action)
+        job_can_do = ['st','sp','ai']
+        if action in job_can_do:
+            ret = self.__commnad(command)
+            print ret
+        else:
+            print 'action do not support'
+
+    def __commnad(self, command):
+        process = subprocess.Popen(command, stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True,close_fds=True)
+        return process.stdout.read()
+
 
 if __name__ == '__main__':
     Server()
