@@ -28,7 +28,8 @@ class Application(tornado.web.Application):
     def __init__(self):
         web_path = [
             (r"/", control.HomeHandler),
-            (r"/packhandler/", control.PackHandler)
+            (r"/packhandler/", control.PackHandler),
+            (r"/unpackhandler/", control.unpackHandler)
         ]
 
         handlers = web_path

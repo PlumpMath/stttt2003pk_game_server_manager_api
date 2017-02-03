@@ -15,6 +15,9 @@ import tornado.gen
 from tornado.concurrent import run_on_executor
 from concurrent.futures import ThreadPoolExecutor
 
+from tornado import iostream
+
+
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 import yaml
@@ -24,6 +27,9 @@ import subprocess
 from saltwork import *
 
 from db_model import *
+
+import socket,hashlib
+import struct
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 config_file = os.path.abspath(os.path.join(cur_dir, 'config.yaml'))
@@ -140,6 +146,59 @@ class BaseHandler(tornado.web.RequestHandler, TemplateRendering):
                 return "False error timeout"
         return process.stdout.read()
 
+class SocketHandler(BaseHandler):
+    def send_socket(self, type=1, id='1', ipaddr='1', command=''):
+        if not type:
+            return False
+        self.type = type
+        self.job_id = id
+        self.ipaddr = ipaddr
+        self.command = command
+
+        self.key = '1234'
+
+        HOST = ipaddr
+        PORT = 9999
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.stream = iostream.IOStream(s)
+        self.stream.set_close_callback(self.auth_close)
+
+        try:
+            self.stream.connect((HOST, PORT), self.auth_request)
+        except:
+            print "auth failed or connection refused"
+            return False
+
+    def auth_close(self):
+        self.stream.close()
+        print 'connection closed'
+
+    def auth_request(self):
+
+        def auth_send(data):
+            #print data
+            md5_hash = hashlib.md5(self.key + data[0:20]).hexdigest()
+            #print md5_hash
+            self.stream.write(md5_hash[10:], self.auth_ok)
+
+        self.stream.read_bytes(30, auth_send)
+
+    def auth_ok(self):
+        self.stream.write(struct.pack('!H', self.type), self.send_data)
+
+    def send_data(self):
+        if self.type == '1':
+            command_len = len(self.command)
+            str_pack = "!II%ds" %command_len
+            self.stream.write(struct.pack(str_pack, self.job_id, command_len, self.command.encode('utf-8')))
+            self.stream.read_bytes(6, self.status_request)
+        self.stream.write('')
+
+    def status_request(self, data):
+        running_state, recive = struct.unpack('!HI', data)
+        print '%s\n%s' %(running_state, recive)
+
 class HomeHandler(tornado.web.RequestHandler):
     def get(self):
         self.write('welcome to the api deployment about cod4server')
@@ -231,6 +290,12 @@ class PackHandler(BaseHandler):
         ret = self.saltrun.__file_check_hash__(tgt, dst_file, md5value=md5value)
         return ret
 
+class unpackHandler(SocketHandler):
+
+    def post(self):
+        self.send_socket(id='1',
+                         ipaddr='192.168.100.77',
+                         command='unpack')
 
 
 
